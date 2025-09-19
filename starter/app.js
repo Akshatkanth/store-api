@@ -26,6 +26,7 @@ app.use(errorMiddleware)
 const port = process.env.PORT || 3000
 console.log("MONGO_URI from .env:", process.env.MONGO_URI);
 
+
 const start = async()=>{
     try {
         //connectDB
