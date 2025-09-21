@@ -4,12 +4,16 @@ const Product = require('../models/product')
 //in static one we majorly test our api and see if it works, 
 // then implement it to the one without the static
 const getAllProductsStatic = async (req, res)=>{
-    const products = await Product.find({}).sort('-name price')
+    const products = await Product.find({})
+    .sort('name')
+    .select('name price')
+    .limit(10)
+    .skip(5)
     res.status(200).json({products, nbhits: products.length})
 }
 
 const getAllProducts = async (req, res)=>{
-    const {featured, company, name, sort} = req.query
+    const {featured, company, name, sort, fields} = req.query
     const queryObject = {} 
     
 
@@ -28,9 +32,20 @@ const getAllProducts = async (req, res)=>{
     
     // console.log(queryObject);
     let result = Product.find(queryObject);
+    //sort
     if(sort){
-        console.log(sort)
+        const sortList = sort.split(',').join(' ');
+        result = result.sort(sortList)
+    }else{
+        result = result.sort('createAt')
     }
+
+    if(fields){
+        const fieldsList = fields.split(',').join(' ');
+        result = result.select(fieldsList)
+    }
+
+
     const products = await result;
     res.status(200).json({products, nbhits: products.length})
 }
