@@ -4,16 +4,16 @@ const Product = require('../models/product')
 //in static one we majorly test our api and see if it works, 
 // then implement it to the one without the static
 const getAllProductsStatic = async (req, res)=>{
-    const products = await Product.find({})
-    .sort('name')
+    const products = await Product.find({price: {$gt: 30}})
+    .sort('price')
     .select('name price')
-    .limit(10)
-    .skip(5)
+    // .limit(10)
+    // .skip(5)
     res.status(200).json({products, nbhits: products.length})
 }
 
 const getAllProducts = async (req, res)=>{
-    const {featured, company, name, sort, fields} = req.query
+    const {featured, company, name, sort, fields, numericFilters} = req.query
     const queryObject = {} 
     
 
@@ -45,6 +45,26 @@ const getAllProducts = async (req, res)=>{
         result = result.select(fieldsList)
     }
 
+    if(numericFilters){
+        const operatorMap = {
+            '>' : '$gt',
+            '>=' : '$gte',
+            '=' : '$et',
+            '<' : '$lt',
+            '<=' : '$lte',
+        }
+        const regEx = /\b(<|>|>=|=|<|<=)\b/g
+        let filters = numericFilters.replace(regEx, (match)=>`-${operatorMap[match]}-`)
+        console.log(filters)
+    }
+
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
+    const skip = (page - 1)* limit;
+
+    result = result.skip(skip).limit(limit)
+    //23
+    //4 = 7 7 7 2(3 pages of 7 and 1 page of 2 for each nbhits)
 
     const products = await result;
     res.status(200).json({products, nbhits: products.length})
